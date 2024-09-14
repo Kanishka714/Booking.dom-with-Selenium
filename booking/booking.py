@@ -43,23 +43,36 @@ class Booking(webdriver.Chrome):
         except Exception as e:
             print(f"An error occurred while trying to close the pop-up: {e}")
 
-    def change_currency(self):
+    def change_currency(self, currency_code):
         # Use WebDriverWait to wait for the currency button to be clickable
         wait = WebDriverWait(self, 10)
         try:
             # Wait for the currency button and click it
-            currency_button = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[data-testid="header-currency-picker-trigger"]')))
+            currency_button = wait.until(
+                EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[data-testid="header-currency-picker-trigger"]'))
+            )
             currency_button.click()
 
-            # Select the 13th ul tag's last li element
-            target_li = wait.until(
-                EC.element_to_be_clickable(
-                    (By.CSS_SELECTOR, 'ul:nth-of-type(13) > li:last-child button[data-testid="selection-item"]')
-                )
-            )
-            target_li.click()
+            # Get all 14 ul tags
+            ul_elements = wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'ul')))
 
-            print("Target currency selected successfully.")
+            # Loop through each ul and its respective li tags
+            for ul in ul_elements:
+                li_elements = ul.find_elements(By.TAG_NAME, 'li')
+                for li in li_elements:
+                    # Get the text inside each li element
+                    li_text = li.text.strip()
+
+                    # Check if the text contains the currency code
+                    if currency_code in li_text:
+                        # Find the button inside this li and click it
+                        currency_button = li.find_element(By.CSS_SELECTOR, 'button[data-testid="selection-item"]')
+                        currency_button.click()
+
+                        print(f"Currency {currency_code} selected successfully.")
+                        return
+
+            print(f"Currency {currency_code} not found.")
 
         except Exception as e:
             print(f"An error occurred while trying to select the currency: {e}")
